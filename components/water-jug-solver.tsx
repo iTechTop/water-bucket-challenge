@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { WaterJugVisualization } from "./water-jug-visualization";
 import { solveWaterJug } from "@/lib/water-jug-algorithm";
@@ -180,6 +181,51 @@ export function WaterJugSolver() {
           stepNumber={currentStep + 1}
           totalSteps={solution.length}
         />
+      )}
+
+      {/* Solution Steps */}
+      {solution.length > 0 && (
+        <Card className="bg-white/90 backdrop-blur-sm border-blue-200 shadow-xl">
+          <CardHeader>
+            <CardTitle className="text-2xl text-blue-800 flex items-center gap-2">
+              📋 Solution Steps
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                {solution.length} steps
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {solution.map((step, index) => (
+                <div
+                  key={index}
+                  className={`p-3 rounded-lg border transition-all ${
+                    index === currentStep
+                      ? "bg-blue-100 border-blue-400 shadow-md"
+                      : "bg-gray-50 border-gray-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Badge variant="outline" className="font-mono">
+                        Step {index + 1}
+                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Jug X:</span>
+                        <Badge variant="secondary">{step.jugX}L</Badge>
+                        <span className="text-sm text-gray-600">Jug Y:</span>
+                        <Badge variant="secondary">{step.jugY}L</Badge>
+                      </div>
+                    </div>
+                    <div className="text-sm font-medium text-blue-700">
+                      {step.action}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
