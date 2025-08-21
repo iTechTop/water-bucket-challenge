@@ -5,17 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { WaterJugVisualization } from "./water-jug-visualization";
+import { solveWaterJug } from "@/lib/water-jug-algorithm";
+
+interface Step {
+  jugX: number;
+  jugY: number;
+  action: string;
+}
 
 export function WaterJugSolver() {
   const [jugX, setJugX] = useState<number>(2);
   const [jugY, setJugY] = useState<number>(10);
   const [target, setTarget] = useState<number>(4);
+  const [solution, setSolution] = useState<Step[]>([]);
+  const [currentStep, setCurrentStep] = useState<number>(-1);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
-  const [success, setSuccess] = useState<string>("");
 
   const handleSolve = () => {
     setError("");
-    setSuccess("");
 
     if (jugX <= 0 || jugY <= 0 || target <= 0) {
       setError("All values must be greater than 0");
@@ -31,19 +40,44 @@ export function WaterJugSolver() {
       return;
     }
 
-    if (target > Math.max(jugX, jugY)) {
-      setError("Target cannot be larger than the biggest jug capacity");
+    const result = solveWaterJug(jugX, jugY, target);
+
+    if (result.length === 0) {
+      setError("No solution possible");
+      setSolution([]);
+      setCurrentStep(-1);
       return;
     }
 
-    setSuccess(
-      `Ready to solve: Jug X (${jugX}L), Jug Y (${jugY}L), Target (${target}L)`
-    );
-    console.log("Solving water jug problem:", { jugX, jugY, target });
+    setSolution(result);
+    setCurrentStep(-1);
+  };
+
+  const playAnimation = () => {
+    if (solution.length === 0) return;
+
+    setIsPlaying(true);
+    setCurrentStep(0);
+
+    let step = 0;
+    const interval = setInterval(() => {
+      step++;
+      if (step >= solution.length) {
+        clearInterval(interval);
+        setIsPlaying(false);
+        return;
+      }
+      setCurrentStep(step);
+    }, 1500);
+  };
+
+  const resetAnimation = () => {
+    setCurrentStep(-1);
+    setIsPlaying(false);
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Input Section */}
       <Card className="bg-white/90 backdrop-blur-sm border-blue-200 shadow-xl">
         <CardHeader>
@@ -63,7 +97,6 @@ export function WaterJugSolver() {
                 onChange={(e) => setJugX(Number.parseInt(e.target.value) || 0)}
                 className="border-blue-300 focus:border-blue-500"
                 min="1"
-                placeholder="e.g., 3"
               />
             </div>
             <div>
@@ -76,7 +109,6 @@ export function WaterJugSolver() {
                 onChange={(e) => setJugY(Number.parseInt(e.target.value) || 0)}
                 className="border-blue-300 focus:border-blue-500"
                 min="1"
-                placeholder="e.g., 5"
               />
             </div>
             <div>
@@ -91,17 +123,38 @@ export function WaterJugSolver() {
                 }
                 className="border-blue-300 focus:border-blue-500"
                 min="1"
-                placeholder="e.g., 4"
               />
             </div>
           </div>
 
-          <Button
-            onClick={handleSolve}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            🔍 Find Solution
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleSolve}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={isPlaying}
+            >
+              🔍 Find Solution
+            </Button>
+            {solution.length > 0 && (
+              <>
+                <Button
+                  onClick={playAnimation}
+                  disabled={isPlaying}
+                  variant="outline"
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-transparent"
+                >
+                  ▶️ Play Animation
+                </Button>
+                <Button
+                  onClick={resetAnimation}
+                  variant="outline"
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-transparent"
+                >
+                  🔄 Reset
+                </Button>
+              </>
+            )}
+          </div>
 
           {error && (
             <Alert className="border-red-300 bg-red-50">
@@ -110,16 +163,24 @@ export function WaterJugSolver() {
               </AlertDescription>
             </Alert>
           )}
-
-          {success && (
-            <Alert className="border-green-300 bg-green-50">
-              <AlertDescription className="text-green-700">
-                {success}
-              </AlertDescription>
-            </Alert>
-          )}
         </CardContent>
       </Card>
+
+      {/* Visualization Section */}
+      {(solution.length > 0 || currentStep >= 0) && (
+        <WaterJugVisualization
+          jugXCapacity={jugX}
+          jugYCapacity={jugY}
+          currentJugX={currentStep >= 0 ? solution[currentStep]?.jugX || 0 : 0}
+          currentJugY={currentStep >= 0 ? solution[currentStep]?.jugY || 0 : 0}
+          target={target}
+          currentAction={
+            currentStep >= 0 ? solution[currentStep]?.action || "" : ""
+          }
+          stepNumber={currentStep + 1}
+          totalSteps={solution.length}
+        />
+      )}
     </div>
   );
 }
