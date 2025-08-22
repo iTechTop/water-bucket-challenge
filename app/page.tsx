@@ -1,9 +1,11 @@
 "use client";
 import { WaterJugSolver } from "@/components/water-jug-solver";
+import { WaterBackground } from "@/components/water-background";
 
 export default function Home() {
   return (
     <div className="min-h-screen relative overflow-hidden">
+      <WaterBackground />
       <div className="relative z-10">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center mb-8">
